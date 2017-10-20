@@ -42,7 +42,7 @@ kernel(Mat *d_output, const float x1, const x2, const float scaleX, const float 
 
 // function called from main.cpp
 // wrapper function
-void wrapper_gpu(Mat input, Mat output){
+void wrapper_gpu(Mat output){
 
   unsigned char *inputPtr = (unsigned char*) input.data;
   unsigned char *outputPtr = (unsigned char*) output.data;
@@ -50,27 +50,30 @@ void wrapper_gpu(Mat input, Mat output){
   unsigned int rows = input.rows;
 
   //block dimensions (threads)
-  int Tx = 32;
-  int Ty = 32;
+  //int Tx = 32;
+  //int Ty = 32;
+  const float x1;
+  const float x2;
+  const float scaleX;
 
   //grid size dimensions (blocks)
-  int Bx = (Tx + rows -1)/Tx;
-  int By = (Ty + cols -1)/Ty;
+  int Bx = (Tx + rows -1)/TX;
+  int By = (Ty + cols -1)/TY;
 
   // declare pointers to device memory
-  unsigned char *d_in  = 0;
+  //unsigned char *d_in  = 0;
   unsigned char *d_out = 0;
  
   // allocate memory in device
-  cudaMalloc(&d_in, cols*rows*sizeof(unsigned char));
+  //cudaMalloc(&d_in, cols*rows*sizeof(unsigned char));
   cudaMalloc(&d_out, cols*rows*sizeof(unsigned char));
  
   // copy input data from host to device	
-  cudaMemcpy(d_in, inputPtr, cols*rows*sizeof(unsigned char), cudaMemcpyHostToDevice);
+  //cudaMemcpy(d_in, inputPtr, cols*rows*sizeof(unsigned char), cudaMemcpyHostToDevice);
 
   //prepare kernel lauch dimensions
-  const dim3 blockSize = dim3(Tx, Ty);
-  const dim3 gridSize= dim3(Bx, By);
+  const dim3 blockSize = dim3(TX, TY);
+  const dim3 gridSize= dim3(BX, BY);
 
   // launch kernel in GPU
   kernel<<<gridSize, blockSize>>>(d_in, d_out, rows, cols);
