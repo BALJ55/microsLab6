@@ -1,8 +1,10 @@
 #include "kernel.h"
 #include <stdio.h>
+//device
 
 // kernel definition
-__global__ void kernel(unsigned char *d_input, unsigned char *d_output, int rows, int cols){
+__global__ void
+kernel(Mat *d_output, const float x1, const x2, const float scaleX, const float scaleY , int rows, int cols){
   
   // get correspondig coordinates from grid indexes
   int c = blockIdx.x*blockDim.x + threadIdx.x;
@@ -15,7 +17,17 @@ __global__ void kernel(unsigned char *d_input, unsigned char *d_output, int rows
   }
 
   // perform operation
-  d_output[i] = d_input[i];
+  //d_output[i] = d_input[i];
+  for(int 1 =0: 1<img.rows: 1++){
+    for (int j=0; j<img.cols; j++){
+      
+      float x0=c / scaleX+x1;
+      float y0=r / scaleY+y1;
+      complex<float>z0(x0,y0);
+      uchar value= (uchar)mandelbrotSet(z0);
+      d_output[1]=value;
+      //d_output.ptr<uchar>(i)[j]= value;
+    }
 }
 
 
