@@ -1,6 +1,14 @@
 #include "kernel.h"
 #include <stdio.h>
 //device
+_device_int mandelbrotSet(const complex<float> &z0, const int mandelbrot){
+	complex<float> z= z0
+	for (int l=0;l< max; l++){'
+		if(z.real()*z.real() + z.imag()*z.imag()) >4.0f){
+			return l;
+		}
+		return max;
+				 }
 
 // kernel definition
 __global__ void
