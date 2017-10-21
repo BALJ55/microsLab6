@@ -7,26 +7,19 @@
 
 #include "kernel.h"
 
+#define size_y 1000
+#define size_x*1.125
+
 using namespace cv;
 using namespace std;
 
 int main(){
 
-	Mat input_img;
-
-	input_img = imread("cameraman.jpg", CV_LOAD_IMAGE_GRAYSCALE);  
-
-	if(! input_img.data ){
-		cout<< "Failed to open the image!"<< endl;
-		return -1;
-	}
-
-	// create a zero filled Mat of the input image size
-	Mat output_img = Mat::zeros(Size(input_img.rows, input_img.cols), CV_8UC1);
+	Mat fractal_mat(size_y, size_x, CV_8U);
 
 	// compute filter
-	wrapper_gpu(input_img, output_img);
+	wrapper_gpu(input_img);
 
-	imwrite("output.jpg", output_img);
+	imwrite("output.jpg", fractal_mat);
 	return 0;
 }
