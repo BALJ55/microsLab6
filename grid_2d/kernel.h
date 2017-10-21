@@ -6,6 +6,6 @@ using namespace cv;
 #define KERNEL_H
 
 // compute distance of array to ref in GPU
-void wrapper_gpu(Mat input, Mat output);
+void wrapper_gpu(Mat input);
 
 #endif

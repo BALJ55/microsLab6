@@ -8,7 +8,7 @@
 #include "kernel.h"
 
 #define size_y 1000
-#define size_x*1.125
+#define size_x size_y*1.125
 
 using namespace cv;
 using namespace std;
@@ -18,7 +18,7 @@ int main(){
 	Mat fractal_mat(size_y, size_x, CV_8U);
 
 	// compute filter
-	wrapper_gpu(input_img);
+	wrapper_gpu(fractal_mat);
 
 	imwrite("output.jpg", fractal_mat);
 	return 0;

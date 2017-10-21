@@ -1,18 +1,22 @@
 #include "kernel.h"
 #include <stdio.h>
+#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 //device
-_device_int mandelbrotSet(const complex<float> &z0, const int mandelbrot){
-	complex<float> z= z0
-	for (int l=0;l< max; l++){'
-		if(z.real()*z.real() + z.imag()*z.imag()) >4.0f){
+__device__ int 
+mandelbrotSet(const std::complex <float> &z0, const int mandelbrot){
+	std::complex <float> z= z0;
+	for (int l=0; l< 500; l++){
+		if((z.real()*z.real() + z.imag()*z.imag()) >4.0f){
 			return l;
 		}
-		return max;
-				 }
-
+	}
+	return 500;
+}
 // kernel definition
 __global__ void
-kernel(Mat *d_output, const float x1, const x2, const float scaleX, const float scaleY , int rows, int cols){
+kernel( Mat *d_output, const float x1, const x2, const float scaleX, const float scaleY , int rows, int cols){
   
   // get correspondig coordinates from grid indexes
   int c = blockIdx.x*blockDim.x + threadIdx.x;
@@ -26,8 +30,8 @@ kernel(Mat *d_output, const float x1, const x2, const float scaleX, const float 
 
   // perform operation
   //d_output[i] = d_input[i];
-  for(int 1 =0: 1<img.rows: 1++){
-    for (int j=0; j<img.cols; j++){
+  for(int i =; i<d_output.rows; i++){
+    for (int j=0; j<d_output.cols; j++){
       
       float x0=c / scaleX+x1;
       float y0=r / scaleY+y1;
@@ -37,7 +41,7 @@ kernel(Mat *d_output, const float x1, const x2, const float scaleX, const float 
       //d_output.ptr<uchar>(i)[j]= value;
     }
 }
-
+}
 
 
 // function called from main.cpp
