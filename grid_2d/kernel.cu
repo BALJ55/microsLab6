@@ -1,17 +1,17 @@
 #include "kernel.h"
-#include <complex>
-#include <cuComplex.h>
-#include <stdio.h>
-#include "math.h"
+
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <stdio.h>
 
+#include <complex>
+#include "math.h"
+#include <cuComplex.h>
 
 
 //compute numer of iterations to diverge
 __device__ int mandelbrotIterations(const cuDoubleComplex &z0, const int max){
-  //Se usa la libreria math de CUDA para numeros complejos
     cuDoubleComplex z = z0;
     for (int t = 0; t < max; t++){
         if( (cuCreal(z)*cuCreal(z) + cuCimag(z)*cuCimag(z) ) > 4.0f){
@@ -19,7 +19,6 @@ __device__ int mandelbrotIterations(const cuDoubleComplex &z0, const int max){
         }
         z = cuCadd(cuCmul(z,z), z0);
     }
-
     return max;
 }
 

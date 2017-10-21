@@ -20,6 +20,6 @@ int main(){
 	// compute filter
 	wrapper_gpu(fractal_mat);
 
-	imwrite("output.jpg", fractal_mat);
+	imwrite("fractal.jpg", fractal_mat);
 	return 0;
 }
