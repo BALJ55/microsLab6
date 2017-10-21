@@ -1,23 +1,44 @@
 #include "kernel.h"
+#include <complex>
+#include <cuComplex.h>
 #include <stdio.h>
+#include "math.h"
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-//device
-__device__ int 
-mandelbrotSet(const std::complex <float> &z0, const int mandelbrot){
-	std::complex <float> z= z0;
-	for (int l=0; l< 500; l++){
-		if((z.real()*z.real() + z.imag()*z.imag()) >4.0f){
-			return l;
-		}
-	}
-	return 500;
+
+
+
+//compute numer of iterations to diverge
+__device__ int mandelbrotIterations(const cuDoubleComplex &z0, const int max){
+  //Se usa la libreria math de CUDA para numeros complejos
+    cuDoubleComplex z = z0;
+    for (int t = 0; t < max; t++){
+        if( (cuCreal(z)*cuCreal(z) + cuCimag(z)*cuCimag(z) ) > 4.0f){
+           return t;
+        }
+        z = cuCadd(cuCmul(z,z), z0);
+    }
+
+    return max;
 }
-// kernel definition
-__global__ void
-kernel( Mat *d_output, const float x1, const x2, const float scaleX, const float scaleY , int rows, int cols){
-  
+
+
+__device__ int mandelbrotSet(const cuDoubleComplex &z0, const int maxIter=500){
+   //does it diverge?
+    int iterations = mandelbrotIterations(z0, maxIter);
+
+    //avoid division by zero
+    if(maxIter - iterations == 0){
+        return 0;
+    }
+
+    //rescale value to 8 bits (CV_U8)
+    return lrint(sqrt(iterations / (float) maxIter) * 255);
+}
+
+__global__ void kernel(unsigned char *d_output, int rows, int cols,float x1, float y1, float scaleX, float scaleY){
+
   // get correspondig coordinates from grid indexes
   int c = blockIdx.x*blockDim.x + threadIdx.x;
   int r = blockIdx.y*blockDim.y + threadIdx.y;
@@ -28,63 +49,52 @@ kernel( Mat *d_output, const float x1, const x2, const float scaleX, const float
     return;
   }
 
-  // perform operation
-  //d_output[i] = d_input[i];
-  for(int i =; i<d_output.rows; i++){
-    for (int j=0; j<d_output.cols; j++){
-      
-      float x0=c / scaleX+x1;
-      float y0=r / scaleY+y1;
-      complex<float>z0(x0,y0);
-      uchar value= (uchar)mandelbrotSet(z0);
-      d_output[1]=value;
-      //d_output.ptr<uchar>(i)[j]= value;
-    }
-}
+  //perform operation
+  float x0= c/scaleX + x1;
+  float y0= r/scaleY +y1;
+  cuDoubleComplex z0 = make_cuDoubleComplex(x0, y0);
+  uchar value = (uchar) mandelbrotSet(z0);
+  d_output[i]= value;
 }
 
-
-// function called from main.cpp
-// wrapper function
 void wrapper_gpu(Mat output){
-
-  unsigned char *inputPtr = (unsigned char*) input.data;
   unsigned char *outputPtr = (unsigned char*) output.data;
-  unsigned int cols = input.cols;
-  unsigned int rows = input.rows;
+  unsigned int cols = output.cols;
+  unsigned int rows = output.rows;
+  float x1 = -2.1f;
+  float x2 =  0.6f;
+  float y1 = -1.2f;
+  float y2 =  1.2f;
+  float scaleX = output.cols / (x2 - x1);
+  float scaleY = output.rows / (y2 - y1);
+
 
   //block dimensions (threads)
-  //int Tx = 32;
-  //int Ty = 32;
-  const float x1;
-  const float x2;
-  const float scaleX;
+  int Tx = 32;
+  int Ty = 32;
 
   //grid size dimensions (blocks)
-  int Bx = (Tx + rows -1)/TX;
-  int By = (Ty + cols -1)/TY;
+  int Bx = (Tx + rows -1)/Tx;
+  int By = (Ty + cols -1)/Ty;
 
   // declare pointers to device memory
-  //unsigned char *d_in  = 0;
+  unsigned char *d_in  = 0;
   unsigned char *d_out = 0;
- 
+
   // allocate memory in device
-  //cudaMalloc(&d_in, cols*rows*sizeof(unsigned char));
+  cudaMalloc(&d_in, cols*rows*sizeof(unsigned char));
   cudaMalloc(&d_out, cols*rows*sizeof(unsigned char));
- 
-  // copy input data from host to device	
-  //cudaMemcpy(d_in, inputPtr, cols*rows*sizeof(unsigned char), cudaMemcpyHostToDevice);
 
   //prepare kernel lauch dimensions
-  const dim3 blockSize = dim3(TX, TY);
-  const dim3 gridSize= dim3(BX, BY);
+  const dim3 blockSize = dim3(Tx, Ty);
+  const dim3 gridSize= dim3(Bx, By);
 
   // launch kernel in GPU
-  kernel<<<gridSize, blockSize>>>(d_in, d_out, rows, cols);
- 
+  kernel<<<gridSize, blockSize>>>(d_out, rows, cols, x1,y1, scaleX, scaleY);
+
   // copy output from device to host
   cudaMemcpy(outputPtr, d_out, rows*cols*sizeof(unsigned char), cudaMemcpyDeviceToHost);
- 
+
   // free the memory allocated for device arrays
   cudaFree(d_in);
   cudaFree(d_out);
